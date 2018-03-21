@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import glob
 import sys
 import time
 import tensorflow as tf
@@ -24,8 +25,8 @@ SNAPSHOT_DIR = './model/'
 
 def get_arguments():
     parser = argparse.ArgumentParser(description="Reproduced PSPNet")
-    parser.add_argument("--input-path", type=str, default='./input',
-                        help="Path to the folder containing RGB files to infer")
+    parser.add_argument("--img-path", type=str, default='',
+                        help="Path to the RGB image file folder.")
     parser.add_argument("--checkpoints", type=str, default=SNAPSHOT_DIR,
                         help="Path to restore weights.")
     parser.add_argument("--save-dir", type=str, default=SAVE_DIR,
@@ -67,19 +68,35 @@ def main():
     num_classes = param['num_classes']
     PSPNet = param['model']
 
+    input_image = tf.placeholder(
+        tf.float32, (1, None, None, 3), name="INPUT_IMAGE")
+
     # preprocess images
-    image_path_ = tf.placeholder(tf.string)
-    img, filename = load_img(image_path_)
+    raw_images = glob.glob(os.path.join(args.img_path, "*.png"))
+    images = []
+    filenames = []
+    for f in raw_images:
+        img, filename = load_img(f)
 
-    img.set_shape([None, None, 3])
+        img_shape = tf.shape(img)
+        h, w = (tf.maximum(crop_size[0], img_shape[0]),
+                tf.maximum(crop_size[1], img_shape[1]))
+        print("Image Original", img)
+        img = preprocess(img, h, w)
+        print("Image Preprocessed", img)
+        images.append(img)
+        filenames.append(filename)
 
-    img_shape = tf.shape(img)
-    h, w = (tf.maximum(crop_size[0], img_shape[0]),
-            tf.maximum(crop_size[1], img_shape[1]))
-    img = preprocess(img, h, w)
+    # img, filename = load_img(args.img_path)
+    # img_shape = tf.shape(img)
+    # h, w = (tf.maximum(crop_size[0], img_shape[0]),
+    #         tf.maximum(crop_size[1], img_shape[1]))
+    # img = preprocess(img, h, w)
 
     # Create network.
-    net = PSPNet({'data': img}, is_training=False, num_classes=num_classes)
+    net = PSPNet(
+        {'data': input_image},
+        is_training=False, num_classes=num_classes)
     with tf.variable_scope('', reuse=True):
         flipped_img = tf.image.flip_left_right(tf.squeeze(img))
         flipped_img = tf.expand_dims(flipped_img, dim=0)
@@ -115,6 +132,7 @@ def main():
 
     ckpt = tf.train.get_checkpoint_state(
         args.checkpoints, latest_filename="checkpoint.txt")
+    print("SEARCHING CHEKPOINTS IN:", args.checkpoints, ckpt)
     if ckpt and ckpt.model_checkpoint_path:
         loader = tf.train.Saver(var_list=restore_var)
         load_step = int(os.path.basename(
@@ -123,16 +141,16 @@ def main():
     else:
         print('No checkpoint file found.')
 
-    files = os.listdir(args.input_path)
-    for idx, f in enumerate(files):
-        start = time.time()
+    for i, current_img in enumerate(images):
+        #     print("Inference over:", filenames[i])
         preds = sess.run(pred, feed_dict={
-                         image_path_: os.path.join(args.input_path, f)})
-        print("File ", idx + 1, "/", len(files),
-              " Time elapsed: %.2fs" % (time.time() - start))
-        if not os.path.exists(args.save_dir):
-            os.makedirs(args.save_dir)
-        misc.imsave(args.save_dir + f, preds[0])
+                         input_image: current_img.eval(session=sess)})
+        misc.imsave(os.path.join(args.save_dir,
+                                 "img{}.png".format(i)), preds[0])
+
+    # if not os.path.exists(args.save_dir):
+    #     os.makedirs(args.save_dir)
+    # misc.imsave(os.path.join(args.save_dir, "ciao.png"), preds[0])
 
 
 if __name__ == '__main__':

@@ -54,23 +54,24 @@ def prepare_label(input_batch, new_size, num_classes, one_hot=True):
 
 
 def load_img(img_path):
-    if os.path.isfile(img_path):
-        print('successful load img: {0}'.format(img_path))
-    else:
-        print('not found file: {0}'.format(img_path))
-        sys.exit(0)
+    # if os.path.isfile(img_path):
+    #     print('successful load img: {0}'.format(img_path))
+    # else:
+    #     print('not found file: {0}'.format(img_path))
+    #     sys.exit(0)
 
-    filename = img_path.split('/')[-1]
-    ext = filename.split('.')[-1]
+    # filename = img_path.split('/')[-1]
+    # ext = filename.split('.')[-1]
 
-    if ext.lower() == 'png':
-        img = tf.image.decode_png(tf.read_file(img_path), channels=3)
-    elif ext.lower() == 'jpg':
-        img = tf.image.decode_jpeg(tf.read_file(img_path), channels=3)
-    else:
-        print('cannot process {0} file.'.format(file_type))
-
-    return img, filename
+    # if ext.lower() == 'png':
+    #     img = tf.image.decode_png(tf.read_file(img_path), channels=3)
+    # elif ext.lower() == 'jpg':
+    #     img = tf.image.decode_jpeg(tf.read_file(img_path), channels=3)
+    # else:
+    #     print('cannot process {0} file.'.format(file_type))
+    img = tf.image.decode_image(tf.read_file(img_path), channels=3)
+    
+    return img, img_path
 
 def preprocess(img, h, w):
     # Convert RGB to BGR

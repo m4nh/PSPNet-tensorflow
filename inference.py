@@ -126,13 +126,13 @@ def main():
     files = os.listdir(args.input_path)
     for idx, f in enumerate(files):
         start = time.time()
-        preds = sess.run(pred, feed_dict={
-                         image_path_: os.path.join(args.input_path, f)})
+        input_file = os.path.join(args.input_path, f)
+        preds = sess.run(pred, feed_dict={image_path_: input_file})
         print("File ", idx + 1, "/", len(files),
               " Time elapsed: %.2fs" % (time.time() - start))
-        if not os.path.exists(args.save_dir):
-            os.makedirs(args.save_dir)
-        misc.imsave(args.save_dir + f, preds[0])
+
+        outputfile = os.path.splitext(input_file)[0] + "_labels.jpg"
+        misc.imsave(outputfile, preds[0])
 
 
 if __name__ == '__main__':

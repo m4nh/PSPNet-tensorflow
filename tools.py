@@ -73,12 +73,13 @@ def load_img(img_path):
     
     return img, img_path
 
-def preprocess(img, h, w):
+def preprocess(img, h, w,remove_mean=True):
     # Convert RGB to BGR
     img_r, img_g, img_b = tf.split(axis=2, num_or_size_splits=3, value=img)
     img = tf.cast(tf.concat(axis=2, values=[img_b, img_g, img_r]), dtype=tf.float32)
     # Extract mean.
-    img -= IMG_MEAN
+    if remove_mean:
+        img -= IMG_MEAN
 
     pad_img = tf.image.pad_to_bounding_box(img, 0, 0, h, w)
     pad_img = tf.expand_dims(pad_img, dim=0)

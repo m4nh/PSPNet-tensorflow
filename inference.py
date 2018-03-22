@@ -28,6 +28,8 @@ def get_arguments():
                         help="Path to the folder containing RGB files to infer")
     parser.add_argument("--checkpoints", type=str, default=SNAPSHOT_DIR,
                         help="Path to restore weights.")
+    parser.add_argument("--suffix", type=str, default="",
+                        help="suffix to labels.")
     parser.add_argument("--save-dir", type=str, default=SAVE_DIR,
                         help="Path to save output.")
     parser.add_argument("--flipped-eval", action="store_true",
@@ -76,7 +78,7 @@ def main():
     img_shape = tf.shape(img)
     h, w = (tf.maximum(crop_size[0], img_shape[0]),
             tf.maximum(crop_size[1], img_shape[1]))
-    img = preprocess(img, h, w)
+    img = preprocess(img, h, w, remove_mean=True)
 
     # Create network.
     net = PSPNet({'data': img}, is_training=False, num_classes=num_classes)
@@ -131,7 +133,8 @@ def main():
         print("File ", idx + 1, "/", len(files),
               " Time elapsed: %.2fs" % (time.time() - start))
 
-        outputfile = os.path.splitext(input_file)[0] + "_labels.jpg"
+        outputfile = os.path.splitext(
+            input_file)[0] + "_labels{}.jpg".format(args.suffix)
         misc.imsave(outputfile, preds[0])
 
 

@@ -63,7 +63,7 @@ for i, f in enumerate(files):
         output_filename_base = "{}".format(str(r_counter).zfill(5))
         r_counter += 1
         crop = cropConcaveDistorted(colored)
-        crop2 = cropToRatio(crop, convertion_ratio, rescale_height=1024)
+        crop2 = cropToRatio(crop, convertion_ratio, rescale_height=None)
 
         crop_filename = "rectified_" + output_filename_base
         crop2_filename = "rectified_" + output_filename_base + "_reduced"
@@ -75,7 +75,7 @@ for i, f in enumerate(files):
     else:
         output_filename_base = "{}".format(str(d_counter).zfill(5))
         d_counter += 1
-        crop = cropToRatio(colored, convertion_ratio, rescale_height=1024)
+        crop = cropToRatio(colored, convertion_ratio, rescale_height=None)
 
         original_filename = "distorted_" + output_filename_base
         crop_filename = "distorted_" + output_filename_base + "_reduced"
